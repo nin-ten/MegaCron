@@ -65,7 +65,7 @@ def updateHeartbeat(worker):
         if w == worker:
             w.heartbeat = datetime.now()
             break
-    
+
     __writeFile(file)
 
 def getWorkers():
@@ -77,7 +77,7 @@ def createWorker():
 
     file['workers'].append(Worker(datetime.now(), id))
     file['nextWorkerId'] += 1
-    
+
     __writeFile(file)
 
     return id
@@ -98,3 +98,9 @@ def __writeFile(data):
     with open(FILE_NAME,"wb") as file:
         pickle.dump(data, file)
 
+def getWorkerStatus():
+    L = len(getWorkers())
+    if (L > 1):
+        print "%d workers are up" % L
+    else:
+        print "%d worker is up" % L
