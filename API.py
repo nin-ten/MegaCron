@@ -125,6 +125,10 @@ def __readFile():
             'nextWorkerId': 1
         }
 
+def __writeFile(data):
+    with open(FILE_NAME,"wb") as file:
+        pickle.dump(data, file)
+
 def __writeFile__(data):
     with open(FILE_NAME+"~","wb") as file:
         pickle.dump(data, file)
