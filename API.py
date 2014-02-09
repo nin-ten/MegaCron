@@ -5,18 +5,25 @@ from datetime import datetime
 FILE_NAME = "db.p"
 
 class Job:
-    def __init__(self, interval, command, userId, lastTimeRun=None):
+    def __init__(self, interval, command, userId, lastTimeRun=None, id=None):
         self.interval = interval
         self.command = command
         self.userId = userId
         self.lastTimeRun = lastTimeRun
+        self.id = id
+
+    def __eq__(self, other):
+        return self.id == other.id
 
 class Schedule:
-    def __init__(self, timeToRun, job, worker=None, completedTime=None):
+    def __init__(self, timeToRun, job, worker=None, id=None):
         self.timeToRun = timeToRun
         self.job = job
         self.worker = worker
-        self.completedTime = completedTime
+        self.id = id
+
+    def __eq__(self, other):
+        return self.id == other.id
 
 class Worker:
     def __init__(self, heartbeat, id=None):
@@ -29,12 +36,18 @@ class Worker:
 def getJobs():
     return __readFile()['jobs']
 
-def getJobs(userId):
+def getJobsForUser(userId):
     jobs = __readFile()['jobs']
     return [job for job in jobs if job.userId == userId]
 
 def setJobs(jobs, userId):
     file = __readFile()
+
+    # Give them an id if they don't already have one
+    for job in jobs:
+        if job.id != None:
+            job.id = file['nextJobId']
+            file['nextJobId'] += 1
 
     file['jobs'] = [job for job in file['jobs'] if job.userId != userId]
     file['jobs'].extend(jobs)
@@ -49,7 +62,20 @@ def getSchedules(worker):
 def addSchedules(schedules):
     file = __readFile()
 
+    # Give them an id if they don't already have one
+    for schedule in schedules:
+        if schedule.id != None:
+            schedule.id = file['nextScheduleId']
+            file['nextScheduleId'] += 1
+
     file['schedules'].extend(schedules)
+
+    __writeFile(file)
+
+def removeSchedule(schedule):
+    file = __readFile()
+
+    file['schedules'].remove(schedule)
 
     __writeFile(file)
 
@@ -77,33 +103,28 @@ def getWorkers():
 def createWorker():
     file = __readFile()
     id = file['nextWorkerId']
-
-    file['workers'].append(Worker(datetime.now(), id))
+    worker = Worker(datetime.now(), id)
+    file['workers'].append(worker)
     file['nextWorkerId'] += 1
 
     __writeFile(file)
 
-    return id
+    return worker
 
 def __readFile():
     try:
-        with open(FILE_NAME,"r") as file:
+        with open(FILE_NAME,"rb") as file:
             return pickle.load(file)
     except IOError:
         return {
             'jobs': [],
             'schedules': [],
             'workers': [],
+            'nextJobId': 1,
+            'nextScheduleId': 1,
             'nextWorkerId': 1
         }
 
-def __writeFile(data):
-    with open(FILE_NAME,"wb") as file:
+def __writeFile__(data):
+    with open(FILE_NAME+"~","wb") as file:
         pickle.dump(data, file)
-
-def getWorkerStatus():
-    L = len(getWorkers())
-    if (L > 1):
-        print "%d workers are up" % L
-    else:
-        print "%d worker is up" % L
