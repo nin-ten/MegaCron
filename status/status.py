@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
-import API
 import time
+import sys
+sys.path.append("../API")
+
+import API
 
 def printWorkerStatus(w):
     for worker in API.getWorkers():

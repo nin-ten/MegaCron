@@ -1,10 +1,14 @@
+#!/usr/bin/python
+
 import sys
 import string
 import subprocess
 import os
 from crontab import CronTab
-import API
+from datetime import datetime
+sys.path.append("../API")
 
+import API
 
 
 uid = str(os.getuid())
@@ -32,6 +36,6 @@ for job in jobs_old:
 	tmp = job.split(' ')
 	interval = string.joinfields(tmp[:5], ' ')
 	cmd = string.joinfields(tmp[5:], ' ')
-	jobs_new.append(API.Job(interval, cmd, uid))
+	jobs_new.append(API.Job(interval, cmd, uid, datetime.now()))
 
 API.setJobs(jobs_new, uid)
